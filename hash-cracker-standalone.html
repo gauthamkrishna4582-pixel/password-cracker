@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Hash Cracker - Brute Force</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container { max-width: 1000px; margin: 0 auto; }
+        
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+        
+        h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+            margin-bottom: 20px;
+        }
+        
+        .warning {
+            background: rgba(255, 152, 0, 0.9);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            display: inline-block;
+            font-weight: 500;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .stats-bar {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-around;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        .main-content {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+        
+        .card {
+            background: #f9f9f9;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #e0e0e0;
+        }
+        
+        h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+        
+        input[type="text"],
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        small {
+            display: block;
+            margin-top: 5px;
+            color: #888;
+            font-size: 0.9em;
+        }
+        
+        .mode-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .mode-btn {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+        
+        .mode-btn:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+        
+        .mode-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+        }
+        
+        .brute-force-settings {
+            display: none;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            border: 2px solid #667eea;
+            margin-top: 15px;
+        }
+        
+        .brute-force-settings.active {
+            display: block;
+        }
+        
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
+            color: white;
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .progress-container {
+            display: none;
+            margin-top: 20px;
+            padding: 20px;
+            background: #f0f8ff;
+            border-radius: 8px;
+            border: 2px solid #667eea;
+        }
+        
+        .progress-container.active {
+            display: block;
+        }
+        
+        .progress-bar-container {
+            width: 100%;
+            height: 30px;
+            background: #ddd;
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .progress-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .progress-item {
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        
+        .result-section {
+            display: none;
+            margin-top: 25px;
+            padding: 20px;
+            border-radius: 8px;
+            animation: slideIn 0.4s;
+        }
+        
+        .result-section.active {
+            display: block;
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .result-success {
+            background: #d4edda;
+            border: 2px solid #28a745;
+            color: #155724;
+        }
+        
+        .result-error {
+            background: #f8d7da;
+            border: 2px solid #dc3545;
+            color: #721c24;
+        }
+        
+        .result-title {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        
+        .result-password {
+            font-size: 2.5em;
+            font-weight: bold;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 8px;
+            margin: 15px 0;
+            word-break: break-all;
+            text-align: center;
+        }
+        
+        .pulse {
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        footer {
+            text-align: center;
+            color: white;
+            padding: 20px;
+            opacity: 0.9;
+        }
+        
+        @media (max-width: 768px) {
+            h1 { font-size: 2em; }
+            .stats-bar { flex-direction: column; gap: 15px; }
+            .mode-selector { flex-direction: column; }
+            .progress-info { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>⚡ ADVANCED HASH CRACKER</h1>
+            <p class="subtitle">Brute Force + Dictionary Attack | 10,000+ Passwords</p>
+            <div class="warning">
+                ⚠️ For Educational Purposes Only
+            </div>
+        </header>
+        
+        <div class="stats-bar">
+            <div class="stat-item">
+                <div class="stat-value" id="dict-size">Loading...</div>
+                <div class="stat-label">Dictionary Size</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">2</div>
+                <div class="stat-label">Attack Modes</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">3</div>
+                <div class="stat-label">Hash Algorithms</div>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <div class="card">
+                <h2>🔓 Crack Hash</h2>
+                
+                <form id="crack-form">
+                    <div class="form-group">
+                        <label for="hash-input">Enter Hash:</label>
+                        <input 
+                            type="text" 
+                            id="hash-input" 
+                            placeholder="e.g., 5f4dcc3b5aa765d61d8327deb882cf99"
+                            required
+                        >
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="algorithm-select">Hash Algorithm:</label>
+                        <select id="algorithm-select">
+                            <option value="md5">MD5</option>
+                            <option value="sha1">SHA-1</option>
+                            <option value="sha256">SHA-256</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Attack Mode:</label>
+                        <div class="mode-selector">
+                            <div class="mode-btn active" data-mode="dictionary">
+                                <strong>📚 Dictionary Attack</strong><br>
+                                <small>Fast - 10,000+ passwords</small>
+                            </div>
+                            <div class="mode-btn" data-mode="brute_force">
+                                <strong>⚡ Brute Force</strong><br>
+                                <small>All combinations</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="brute-force-settings" id="brute-settings">
+                        <h3 style="margin-bottom: 15px; color: #667eea;">⚙️ Brute Force Settings</h3>
+                        
+                        <div class="form-group">
+                            <label for="charset-select">Character Set:</label>
+                            <select id="charset-select">
+                                <option value="numeric">Numbers only (0-9)</option>
+                                <option value="lowercase">Lowercase (a-z)</option>
+                                <option value="uppercase">Uppercase (A-Z)</option>
+                                <option value="alpha">Letters (a-z, A-Z)</option>
+                                <option value="alphanumeric" selected>Letters + Numbers</option>
+                                <option value="all">All (Letters + Numbers + Symbols)</option>
+                            </select>
+                        </div>
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                            <div class="form-group">
+                                <label for="min-length">Min Length:</label>
+                                <input type="number" id="min-length" value="1" min="1" max="8">
+                            </div>
+                            <div class="form-group">
+                                <label for="max-length">Max Length:</label>
+                                <input type="number" id="max-length" value="4" min="1" max="8">
+                            </div>
+                        </div>
+                        
+                        <small style="color: #ff4b2b; font-weight: 600;">
+                            ⚠️ Warning: Length > 6 can take VERY long time!
+                        </small>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary" id="crack-btn">
+                        🚀 Start Cracking
+                    </button>
+                </form>
+                
+                <div class="progress-container" id="progress-container">
+                    <h3 style="color: #667eea; margin-bottom: 10px;">⏳ Cracking in Progress...</h3>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar" id="progress-bar" style="width: 0%;">0%</div>
+                    </div>
+                    <div class="progress-info">
+                        <div class="progress-item">
+                            <strong>Attempts:</strong> <span id="attempts-count">0</span>
+                        </div>
+                        <div class="progress-item">
+                            <strong>Current:</strong> <span id="current-password" class="pulse">-</span>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-danger" id="stop-btn" style="margin-top: 15px;">
+                        🛑 Stop Cracking
+                    </button>
+                </div>
+                
+                <div class="result-section" id="result-section">
+                    <div id="result-content"></div>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>Built for educational purposes | Advanced password security demonstration</p>
+            <p style="font-size: 0.9em; opacity: 0.7;">Python Flask + JavaScript + Brute Force Engine</p>
+        </footer>
+    </div>
+    
+    <script>
+        let currentMode = 'dictionary';
+        let statusInterval = null;
+        
+        // Load stats
+        fetch('/api/stats')
+            .then(r => r.json())
+            .then(data => {
+                document.getElementById('dict-size').textContent = data.dictionary_size.toLocaleString();
+            });
+        
+        // Mode selection
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                currentMode = this.dataset.mode;
+                
+                if (currentMode === 'brute_force') {
+                    document.getElementById('brute-settings').classList.add('active');
+                } else {
+                    document.getElementById('brute-settings').classList.remove('active');
+                }
+            });
+        });
+        
+        // Start cracking
+        document.getElementById('crack-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const hash = document.getElementById('hash-input').value.trim();
+            const algorithm = document.getElementById('algorithm-select').value;
+            const charset = document.getElementById('charset-select').value;
+            const minLength = parseInt(document.getElementById('min-length').value);
+            const maxLength = parseInt(document.getElementById('max-length').value);
+            
+            // Reset UI
+            document.getElementById('result-section').classList.remove('active');
+            document.getElementById('crack-btn').disabled = true;
+            
+            try {
+                const response = await fetch('/api/crack', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        hash: hash,
+                        algorithm: algorithm,
+                        mode: currentMode,
+                        charset: charset,
+                        min_length: minLength,
+                        max_length: maxLength
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById('progress-container').classList.add('active');
+                    startStatusPolling();
+                } else {
+                    alert(data.error);
+                    document.getElementById('crack-btn').disabled = false;
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+                document.getElementById('crack-btn').disabled = false;
+            }
+        });
+        
+        // Poll status
+        function startStatusPolling() {
+            statusInterval = setInterval(async () => {
+                try {
+                    const response = await fetch('/api/status');
+                    const status = await response.json();
+                    
+                    // Update progress
+                    document.getElementById('progress-bar').style.width = status.progress + '%';
+                    document.getElementById('progress-bar').textContent = status.progress + '%';
+                    document.getElementById('attempts-count').textContent = status.attempts.toLocaleString();
+                    document.getElementById('current-password').textContent = status.current_password || '-';
+                    
+                    // Check if done
+                    if (!status.is_cracking) {
+                        clearInterval(statusInterval);
+                        document.getElementById('progress-container').classList.remove('active');
+                        document.getElementById('crack-btn').disabled = false;
+                        
+                        if (status.found) {
+                            showResult(true, status.found_password, status.attempts);
+                        } else {
+                            showResult(false, null, status.attempts);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Status poll error:', error);
+                }
+            }, 500);
+        }
+        
+        // Stop cracking
+        document.getElementById('stop-btn').addEventListener('click', async () => {
+            try {
+                await fetch('/api/stop', { method: 'POST' });
+                clearInterval(statusInterval);
+                document.getElementById('progress-container').classList.remove('active');
+                document.getElementById('crack-btn').disabled = false;
+            } catch (error) {
+                console.error('Stop error:', error);
+            }
+        });
+        
+        // Show result
+        function showResult(success, password, attempts) {
+            const resultSection = document.getElementById('result-section');
+            const resultContent = document.getElementById('result-content');
+            
+            resultSection.classList.add('active');
+            
+            if (success) {
+                resultContent.className = 'result-success';
+                resultContent.innerHTML = `
+                    <div class="result-title">✅ PASSWORD CRACKED!</div>
+                    <div class="result-password">🔓 ${password}</div>
+                    <div style="text-align: center; margin-top: 15px;">
+                        <strong>Attempts:</strong> ${attempts.toLocaleString()}<br>
+                        <strong>Mode:</strong> ${currentMode === 'dictionary' ? 'Dictionary Attack' : 'Brute Force'}<br>
+                        <strong>Algorithm:</strong> ${document.getElementById('algorithm-select').value.toUpperCase()}
+                    </div>
+                `;
+            } else {
+                resultContent.className = 'result-error';
+                resultContent.innerHTML = `
+                    <div class="result-title">❌ Password Not Found</div>
+                    <p style="margin: 15px 0;">After ${attempts.toLocaleString()} attempts, the password was not found.</p>
+                    <p><strong>Suggestions:</strong></p>
+                    <ul style="margin-left: 20px; margin-top: 10px;">
+                        <li>Try Dictionary mode first (faster)</li>
+                        <li>For Brute Force: increase max length or try different charset</li>
+                        <li>The password might not be common or simple</li>
+                    </ul>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>
